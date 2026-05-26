@@ -26,12 +26,13 @@ hooks = cfg.setdefault("hooks", {})
 def add_hook(section, cmd):
     # Claude Code format: [{matcher, hooks: [{type, command}]}]
     entries = hooks.setdefault(section, [])
-    for e in entries:
+    # Remove stale entries for this command (may lack timeout), then re-add
+    for e in entries[:]:
         if isinstance(e, dict):
-            for h in e.get("hooks", []):
-                if isinstance(h, dict) and h.get("command") == cmd:
-                    return  # already registered
-    entries.append({"matcher": "", "hooks": [{"type": "command", "command": cmd}]})
+            e["hooks"] = [h for h in e.get("hooks", []) if not (isinstance(h, dict) and h.get("command") == cmd)]
+        if not e.get("hooks"):
+            entries.remove(e)
+    entries.append({"hooks": [{"type": "command", "command": cmd, "timeout": 5}]})
 
 add_hook("SessionStart", start_cmd)
 add_hook("SessionEnd", stop_cmd)
