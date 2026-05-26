@@ -153,6 +153,10 @@ def fmt_reset(mins: int) -> str:
 class ClaudemeterApp(rumps.App):
     def __init__(self) -> None:
         super().__init__("Claude", title="◌ —", quit_button="Quit")
+        import AppKit
+        AppKit.NSApplication.sharedApplication().setActivationPolicy_(
+            AppKit.NSApplicationActivationPolicyAccessory
+        )
         self.item_status = rumps.MenuItem("Status: starting…")
         self.item_5h = rumps.MenuItem("5h: —")
         self.item_5h_reset = rumps.MenuItem("  resets in —")
