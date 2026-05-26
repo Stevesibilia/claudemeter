@@ -65,6 +65,25 @@ Verify your Keychain entry first:
 security find-generic-password -s "Claude Code-credentials" -a "$USER" -w | head -c 20
 ```
 
+## Auto-launch with Claude Code (hooks)
+
+Claudemeter can start automatically when you open Claude Code and stop when you close the last session.
+
+```bash
+./hooks/install.sh
+```
+
+This registers two hooks in `~/.claude/settings.json`:
+
+| Hook | Action |
+|------|--------|
+| `SessionStart` | Launches Claudemeter if not already running |
+| `Stop` | Kills Claudemeter only when the **last** Claude session closes |
+
+Multiple Claude windows are safe — the stop hook counts running sessions before killing.
+
+Logs land in `/tmp/claudemeter.log`.
+
 ## Run on login (optional)
 
 Drop a launchd plist in `~/Library/LaunchAgents/`. Example template:
