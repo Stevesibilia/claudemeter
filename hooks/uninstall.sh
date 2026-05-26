@@ -21,7 +21,7 @@ with open(path) as f:
 
 hooks = cfg.get("hooks", {})
 
-for section, cmd in [("SessionStart", start_cmd), ("Stop", stop_cmd)]:
+for section, cmd in [("SessionStart", start_cmd), ("SessionEnd", stop_cmd), ("Stop", stop_cmd)]:
     entries = hooks.get(section, [])
     cleaned = []
     for e in entries:

@@ -78,7 +78,7 @@ This registers two hooks in `~/.claude/settings.json`:
 | Hook | Action |
 |------|--------|
 | `SessionStart` | Launches Claudemeter if not already running |
-| `Stop` | Kills Claudemeter only when the **last** Claude session closes |
+| `SessionEnd` | Kills Claudemeter only when the **last** Claude session closes |
 
 Multiple Claude windows are safe — the stop hook counts running sessions before killing.
 

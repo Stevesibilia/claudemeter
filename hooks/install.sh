@@ -34,7 +34,7 @@ def add_hook(section, cmd):
     entries.append({"matcher": "", "hooks": [{"type": "command", "command": cmd}]})
 
 add_hook("SessionStart", start_cmd)
-add_hook("Stop", stop_cmd)
+add_hook("SessionEnd", stop_cmd)
 
 with open(path, "w") as f:
     json.dump(cfg, f, indent=2)
