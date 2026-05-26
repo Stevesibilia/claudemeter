@@ -23,8 +23,16 @@ hooks = cfg.get("hooks", {})
 
 for section, cmd in [("SessionStart", start_cmd), ("Stop", stop_cmd)]:
     entries = hooks.get(section, [])
-    hooks[section] = [e for e in entries
-                      if not (isinstance(e, dict) and e.get("command") == cmd)]
+    cleaned = []
+    for e in entries:
+        if isinstance(e, dict):
+            inner = [h for h in e.get("hooks", [])
+                     if not (isinstance(h, dict) and h.get("command") == cmd)]
+            if inner:
+                cleaned.append({**e, "hooks": inner})
+        else:
+            cleaned.append(e)
+    hooks[section] = cleaned
 
 with open(path, "w") as f:
     json.dump(cfg, f, indent=2)

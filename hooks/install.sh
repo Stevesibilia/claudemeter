@@ -24,12 +24,14 @@ with open(path) as f:
 hooks = cfg.setdefault("hooks", {})
 
 def add_hook(section, cmd):
+    # Claude Code format: [{matcher, hooks: [{type, command}]}]
     entries = hooks.setdefault(section, [])
-    # Avoid duplicates
     for e in entries:
-        if isinstance(e, dict) and e.get("command") == cmd:
-            return
-    entries.append({"type": "command", "command": cmd})
+        if isinstance(e, dict):
+            for h in e.get("hooks", []):
+                if isinstance(h, dict) and h.get("command") == cmd:
+                    return  # already registered
+    entries.append({"matcher": "", "hooks": [{"type": "command", "command": cmd}]})
 
 add_hook("SessionStart", start_cmd)
 add_hook("Stop", stop_cmd)
