@@ -84,6 +84,14 @@ Multiple Claude windows are safe — the stop hook counts running sessions befor
 
 Logs land in `/tmp/claudemeter.log`.
 
+To uninstall:
+
+```bash
+./hooks/uninstall.sh
+```
+
+Removes both hooks from `~/.claude/settings.json` and stops Claudemeter.
+
 ## Run on login (optional)
 
 Drop a launchd plist in `~/Library/LaunchAgents/`. Example template:
