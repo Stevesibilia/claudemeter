@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
 # SessionStart hook — launch Claudemeter if not already running
-exec < /dev/null  # close hook stdin so it can't leak into child processes
 pgrep -qf "python.*claudemeter\.py" || \
   nohup "$(dirname "$0")/../run.sh" < /dev/null >> /tmp/claudemeter.log 2>&1 &
