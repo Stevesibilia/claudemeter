@@ -62,15 +62,23 @@ for section in ["SessionStart", "SessionEnd"]:
     elif section in hooks:
         del hooks[section]
 
+# Remove statusLine if it points to claudemeter
+sl = cfg.get("statusLine", {})
+if isinstance(sl, dict) and "claudemeter" in sl.get("command", ""):
+    del cfg["statusLine"]
+
 with open(path, "w") as f:
     json.dump(cfg, f, indent=2)
     f.write("\n")
 PYEOF
-    changed "hooks removed from $SETTINGS"
+    changed "hooks and statusLine removed from $SETTINGS"
   fi
 
   # Kill running process
   pkill -f "python.*claudemeter\.py" 2>/dev/null && changed "stopped running process" || true
+
+  # Remove cache file
+  rm -f "$HOME/.claude/.claudemeter-quota"
 
   # Remove install directory
   if [ -d "$INSTALL_DIR" ]; then
