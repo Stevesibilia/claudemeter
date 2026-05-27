@@ -2,7 +2,7 @@
 # Registers Claudemeter hooks in ~/.claude/settings.json
 set -euo pipefail
 
-REPO_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+REPO_DIR="${INSTALL_DIR:-$(cd "$(dirname "$0")/.." && pwd)}"
 SETTINGS="$HOME/.claude/settings.json"
 START_CMD="$REPO_DIR/hooks/start.sh"
 STOP_CMD="$REPO_DIR/hooks/stop.sh"
