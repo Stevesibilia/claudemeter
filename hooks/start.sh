@@ -7,4 +7,10 @@ mkdir -p /tmp/claudemeter-sessions
 [ -n "$SESSION_ID" ] && touch "/tmp/claudemeter-sessions/$SESSION_ID"
 
 pgrep -qf "python.*claudemeter\.py" && exit 0
-nohup "$(dirname "$0")/../run.sh" < /dev/null >> /tmp/claudemeter.log 2>&1 &
+
+SCRIPT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+if [ "$(uname -s)" = "Darwin" ]; then
+  nohup "$SCRIPT_DIR/run.sh" < /dev/null >> /tmp/claudemeter.log 2>&1 &
+else
+  nohup "$SCRIPT_DIR/.venv/bin/python" "$SCRIPT_DIR/claudemeter.py" --headless < /dev/null >> /tmp/claudemeter.log 2>&1 &
+fi

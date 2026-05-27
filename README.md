@@ -1,10 +1,23 @@
 # Claudemeter
 
-macOS menu bar indicator for Claude Code usage. Shows your unified **5-hour** and **7-day** quota utilization in real time, rendered in Claude orange.
+Cross-platform Claude Code quota monitor. Shows your unified **5-hour** and **7-day** quota utilization in real time.
 
-![menubar example](docs/screenshot.png)
+- **macOS**: Menu bar indicator (Claude orange) + Claude Code statusline
+- **Linux**: Claude Code statusline
 
 ## What it shows
+
+### Claude Code statusline (macOS + Linux)
+
+The Claude Code terminal footer displays:
+
+```
+◔ 5h:47% 7d:12%
+```
+
+A `?` suffix appears if data is stale (poller not running or crashed).
+
+### macOS menu bar (macOS only)
 
 The menu bar title looks like:
 
@@ -31,7 +44,7 @@ Click the icon to see:
 
 ## How it works
 
-Claudemeter reads the OAuth access token that `claude` (Claude Code CLI) stores in the macOS Keychain (`Claude Code-credentials`), then sends a 1-token `POST /v1/messages` to `api.anthropic.com` once per minute. Anthropic's response carries the rate-limit headers:
+Claudemeter reads the OAuth access token from the macOS Keychain (`Claude Code-credentials`) or from `~/.claude/.credentials.json` (Linux), then sends a 1-token `POST /v1/messages` to `api.anthropic.com` once per minute. Anthropic's response carries the rate-limit headers:
 
 - `anthropic-ratelimit-unified-5h-utilization`
 - `anthropic-ratelimit-unified-5h-reset`
@@ -41,13 +54,24 @@ Claudemeter reads the OAuth access token that `claude` (Claude Code CLI) stores 
 
 These drive the menu bar display.
 
+Poll results are also written to `~/.claude/.claudemeter-quota` (JSON) which the Claude Code statusline script reads.
+
 > Cost: each poll consumes `max_tokens=1` (one "hi"). Negligible, but real.
 
 ## Requirements
 
-- macOS 12+
+- macOS 12+ or Linux
 - Python 3.10+
-- You must be logged in to Claude Code (so the Keychain entry exists)
+- You must be logged in to Claude Code
+
+## Modes
+
+| Mode | Platform | What |
+|------|----------|------|
+| Menu bar | macOS | Full menu bar app + statusline cache |
+| Headless (`--headless`) | macOS + Linux | Background poller, writes cache only |
+
+On Linux, the installer automatically uses headless mode. The Claude Code statusline reads the cache file on both platforms.
 
 ## Install & run
 
@@ -165,6 +189,11 @@ Drop a launchd plist in `~/Library/LaunchAgents/`. Example template:
 ```
 
 Load: `launchctl load ~/Library/LaunchAgents/local.claudemeter.plist`
+
+## Known limitations
+
+- **Single statusline**: Claude Code supports only one `statusLine` command. If you use another plugin that sets a statusline (e.g., caveman), only one can be active. A combined wrapper script is needed to show both — not yet automated.
+- **Token refresh**: Claudemeter reads the stored token but does not refresh it. If the token expires between sessions, re-login to Claude Code to get a fresh one.
 
 ## Credits
 

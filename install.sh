@@ -20,6 +20,7 @@ set -euo pipefail
 
 INSTALL_DIR="${INSTALL_DIR:-$HOME/.local/share/claudemeter}"
 REPO="Stevesibilia/claudemeter"
+PLATFORM="$(uname -s)"  # Darwin or Linux
 CHANGED=0
 
 changed() {
@@ -109,8 +110,13 @@ else
 fi
 
 # --- Venv + deps ----------------------------------------------------------
+if [ "$PLATFORM" = "Darwin" ]; then
+  REQS_FILE="$INSTALL_DIR/requirements-macos.txt"
+else
+  REQS_FILE="$INSTALL_DIR/requirements-base.txt"
+fi
 DEPS_HASH_FILE="$INSTALL_DIR/.venv/.deps-hash"
-NEW_HASH=$(shasum -a 256 "$INSTALL_DIR/requirements.txt" | cut -d' ' -f1)
+NEW_HASH=$(shasum -a 256 "$REQS_FILE" | cut -d' ' -f1)
 CURRENT_HASH=""
 if [ -f "$DEPS_HASH_FILE" ]; then
   CURRENT_HASH=$(cat "$DEPS_HASH_FILE")
@@ -121,7 +127,7 @@ if [ "$NEW_HASH" != "$CURRENT_HASH" ]; then
     python3 -m venv "$INSTALL_DIR/.venv"
   fi
   "$INSTALL_DIR/.venv/bin/pip" install -U pip -q
-  "$INSTALL_DIR/.venv/bin/pip" install -r "$INSTALL_DIR/requirements.txt" -q
+  "$INSTALL_DIR/.venv/bin/pip" install -r "$REQS_FILE" -q
   mkdir -p "$(dirname "$DEPS_HASH_FILE")"
   echo "$NEW_HASH" > "$DEPS_HASH_FILE"
   changed "venv rebuilt"
@@ -143,6 +149,35 @@ fi
 if [ "$HOOKS_NEEDED" = true ]; then
   INSTALL_DIR="$INSTALL_DIR" "$INSTALL_DIR/hooks/install.sh"
   changed "hooks registered"
+fi
+
+# --- StatusLine -----------------------------------------------------------
+STATUSLINE_CMD="bash \"$INSTALL_DIR/claudemeter-statusline.sh\""
+STATUSLINE_NEEDED=false
+
+if [ ! -f "$SETTINGS" ]; then
+  mkdir -p "$(dirname "$SETTINGS")"
+  echo '{}' > "$SETTINGS"
+  STATUSLINE_NEEDED=true
+elif ! grep -q "claudemeter-statusline" "$SETTINGS" 2>/dev/null; then
+  STATUSLINE_NEEDED=true
+fi
+
+if [ "$STATUSLINE_NEEDED" = true ]; then
+  python3 - "$SETTINGS" "$STATUSLINE_CMD" <<'PYEOF'
+import json, sys
+
+path, cmd = sys.argv[1], sys.argv[2]
+with open(path) as f:
+    cfg = json.load(f)
+
+cfg["statusLine"] = {"type": "command", "command": cmd}
+
+with open(path, "w") as f:
+    json.dump(cfg, f, indent=2)
+    f.write("\n")
+PYEOF
+  changed "statusLine registered"
 fi
 
 # --- Result ---------------------------------------------------------------
