@@ -118,10 +118,12 @@ else
 fi
 
 # --- Venv + deps ----------------------------------------------------------
-if [ "$PLATFORM" = "Darwin" ]; then
+if [ "$PLATFORM" = "Darwin" ] && [ -f "$INSTALL_DIR/requirements-macos.txt" ]; then
   REQS_FILE="$INSTALL_DIR/requirements-macos.txt"
-else
+elif [ -f "$INSTALL_DIR/requirements-base.txt" ]; then
   REQS_FILE="$INSTALL_DIR/requirements-base.txt"
+else
+  REQS_FILE="$INSTALL_DIR/requirements.txt"
 fi
 DEPS_HASH_FILE="$INSTALL_DIR/.venv/.deps-hash"
 NEW_HASH=$(shasum -a 256 "$REQS_FILE" | cut -d' ' -f1)
