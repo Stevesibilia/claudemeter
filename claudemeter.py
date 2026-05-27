@@ -176,6 +176,7 @@ class ClaudemeterApp(rumps.App):
         self._lock = threading.Lock()
         self._stop = threading.Event()
         self._wake = threading.Event()
+        self._token: str | None = read_token()  # cache; re-read only on auth failure
         t = threading.Thread(target=self._poll_loop, daemon=True)
         t.start()
 
@@ -189,11 +190,14 @@ class ClaudemeterApp(rumps.App):
             self._wake.clear()
 
     def _tick(self) -> None:
-        token = read_token()
-        if not token:
+        if not self._token:
+            self._token = read_token()  # retry if startup read failed
+        if not self._token:
             self._apply({"ok": False, "error": "no token"})
             return
-        result = poll_api(token)
+        result = poll_api(self._token)
+        if result and not result.get("ok") and "401" in result.get("error", ""):
+            self._token = read_token()  # token expired, re-read from keychain
         self._apply(result or {"ok": False, "error": "no response"})
 
     def _apply(self, r: dict) -> None:
