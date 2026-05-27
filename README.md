@@ -51,6 +51,34 @@ These drive the menu bar display.
 
 ## Install & run
 
+### One-liner (recommended)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Stevesibilia/claudemeter/main/install.sh | bash
+```
+
+This downloads Claudemeter to `~/.local/share/claudemeter`, creates a venv, installs dependencies, and registers Claude Code hooks — all idempotently.
+
+Pin a specific version:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Stevesibilia/claudemeter/main/install.sh | CLAUDEMETER_VERSION=v1.0.0 bash
+```
+
+Custom install location:
+
+```bash
+curl -fsSL ... | INSTALL_DIR=/opt/claudemeter bash
+```
+
+Uninstall:
+
+```bash
+~/.local/share/claudemeter/install.sh --uninstall
+```
+
+### From source (development)
+
 ```bash
 git clone https://github.com/Stevesibilia/claudemeter.git
 cd claudemeter
@@ -58,6 +86,28 @@ cd claudemeter
 ```
 
 `run.sh` creates a `.venv`, installs dependencies, and starts the app.
+
+### Ansible
+
+The installer is fully idempotent and outputs machine-readable status:
+
+```yaml
+- name: Install/update claudemeter
+  ansible.builtin.shell: |
+    curl -fsSL https://raw.githubusercontent.com/Stevesibilia/claudemeter/{{ claudemeter_version }}/install.sh \
+    | CLAUDEMETER_VERSION={{ claudemeter_version }} bash
+  register: result
+  changed_when: "'CHANGED' in result.stdout"
+
+- name: Uninstall claudemeter
+  ansible.builtin.shell: ~/.local/share/claudemeter/install.sh --uninstall
+  when: claudemeter_state == "absent"
+```
+
+Output protocol:
+- `CHANGED: <description>` — printed for each mutation
+- `OK: already up to date` — when nothing changed
+- Exit 0 = success, exit 1 = error
 
 Verify your Keychain entry first:
 
