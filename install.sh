@@ -86,6 +86,19 @@ PYEOF
     changed "removed $INSTALL_DIR"
   fi
 
+  # Waybar cleanup hint
+  if [ "$PLATFORM" != "Darwin" ] && command -v waybar >/dev/null 2>&1; then
+    WAYBAR_CFG="${XDG_CONFIG_HOME:-$HOME/.config}/waybar/config"
+    [ ! -f "$WAYBAR_CFG" ] && WAYBAR_CFG="${XDG_CONFIG_HOME:-$HOME/.config}/waybar/config.jsonc"
+    if [ -f "$WAYBAR_CFG" ] && grep -q "claudemeter" "$WAYBAR_CFG" 2>/dev/null; then
+      echo ""
+      echo "NOTE: Remove 'custom/claudemeter' from your Waybar config manually:"
+      echo "  $WAYBAR_CFG"
+      echo "Also remove #custom-claudemeter styles from your Waybar style.css."
+      echo ""
+    fi
+  fi
+
   echo "Claudemeter uninstalled."
   exit 0
 fi
@@ -114,6 +127,7 @@ else
     || die "Failed to download $TARBALL_URL"
   echo "$CLAUDEMETER_VERSION" > "$INSTALL_DIR/.version"
   chmod +x "$INSTALL_DIR/run.sh" "$INSTALL_DIR/hooks/"*.sh
+  [ -f "$INSTALL_DIR/claudemeter-waybar.sh" ] && chmod +x "$INSTALL_DIR/claudemeter-waybar.sh"
   changed "updated to $CLAUDEMETER_VERSION"
 fi
 
@@ -188,6 +202,29 @@ with open(path, "w") as f:
     f.write("\n")
 PYEOF
   changed "statusLine registered"
+fi
+
+# --- Waybar hint (Sway / Hyprland) ----------------------------------------
+if [ "$PLATFORM" != "Darwin" ] && command -v waybar >/dev/null 2>&1; then
+  WAYBAR_SCRIPT="$INSTALL_DIR/claudemeter-waybar.sh"
+  if [ -f "$WAYBAR_SCRIPT" ]; then
+    echo ""
+    echo "Waybar detected! To add Claudemeter to your bar:"
+    echo ""
+    echo "  1. Add to ~/.config/waybar/config:"
+    echo '     "modules-right": ["custom/claudemeter", ...]'
+    echo ""
+    echo '     "custom/claudemeter": {'
+    echo "         \"exec\": \"$WAYBAR_SCRIPT\","
+    echo '         "return-type": "json",'
+    echo '         "interval": 30,'
+    echo '         "tooltip": true'
+    echo '     }'
+    echo ""
+    echo "  2. Add styles from: $INSTALL_DIR/waybar/style.css"
+    echo "  3. Reload: killall -SIGUSR2 waybar"
+    echo ""
+  fi
 fi
 
 # --- Result ---------------------------------------------------------------

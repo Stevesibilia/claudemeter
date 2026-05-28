@@ -1,0 +1,14 @@
+// Add this module to your Waybar config (~/.config/waybar/config)
+//
+// 1. Add "custom/claudemeter" to your "modules-right" (or left/center):
+//    "modules-right": ["custom/claudemeter", "clock", ...]
+//
+// 2. Add this module definition:
+{
+    "custom/claudemeter": {
+        "exec": "~/.local/share/claudemeter/claudemeter-waybar.sh",
+        "return-type": "json",
+        "interval": 30,
+        "tooltip": true
+    }
+}
