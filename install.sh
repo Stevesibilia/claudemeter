@@ -77,6 +77,11 @@ PYEOF
   # Kill running process
   pkill -f "python.*claudemeter\.py" 2>/dev/null && changed "stopped running process" || true
 
+  # Remove KDE plasmoid
+  if command -v plasmashell >/dev/null 2>&1 && kpackagetool6 --type Plasma/Applet --show org.kde.claudemeter >/dev/null 2>&1; then
+    kpackagetool6 --type Plasma/Applet --remove org.kde.claudemeter 2>/dev/null && changed "plasmoid removed" || true
+  fi
+
   # Remove cache file
   rm -f "$HOME/.claude/.claudemeter-quota"
 
@@ -202,6 +207,24 @@ with open(path, "w") as f:
     f.write("\n")
 PYEOF
   changed "statusLine registered"
+fi
+
+# --- KDE Plasma widget -----------------------------------------------------
+if [ "$PLATFORM" != "Darwin" ] && command -v plasmashell >/dev/null 2>&1; then
+  PLASMOID_DIR="$INSTALL_DIR/kde-plasmoid"
+  if [ -d "$PLASMOID_DIR" ]; then
+    if kpackagetool6 --type Plasma/Applet --show org.kde.claudemeter >/dev/null 2>&1; then
+      kpackagetool6 --type Plasma/Applet --upgrade "$PLASMOID_DIR" 2>/dev/null && changed "plasmoid upgraded" || true
+    else
+      kpackagetool6 --type Plasma/Applet --install "$PLASMOID_DIR" && changed "plasmoid installed"
+    fi
+    echo ""
+    echo "KDE Plasma widget installed! To add it to your panel:"
+    echo "  1. Right-click your panel → Add Widgets"
+    echo "  2. Search for \"Claudemeter\""
+    echo "  3. Drag it to your panel"
+    echo ""
+  fi
 fi
 
 # --- Waybar hint (Sway / Hyprland) ----------------------------------------

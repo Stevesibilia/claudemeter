@@ -1,0 +1,19 @@
+{
+    "KPlugin": {
+        "Id": "org.kde.claudemeter",
+        "Name": "Claudemeter",
+        "Description": "Claude Code quota utilization monitor",
+        "Icon": "speedometer",
+        "Authors": [
+            {
+                "Name": "Steve Sibilia",
+                "Email": ""
+            }
+        ],
+        "Category": "System Information",
+        "License": "MIT",
+        "Version": "1.0.0"
+    },
+    "X-Plasma-API-Minimum-Version": "6.0",
+    "KPackageStructure": "Plasma/Applet"
+}
