@@ -86,6 +86,19 @@ PYEOF
     changed "removed $INSTALL_DIR"
   fi
 
+  # Waybar cleanup hint
+  if [ "$PLATFORM" != "Darwin" ] && command -v waybar >/dev/null 2>&1; then
+    WAYBAR_CFG="${XDG_CONFIG_HOME:-$HOME/.config}/waybar/config"
+    [ ! -f "$WAYBAR_CFG" ] && WAYBAR_CFG="${XDG_CONFIG_HOME:-$HOME/.config}/waybar/config.jsonc"
+    if [ -f "$WAYBAR_CFG" ] && grep -q "claudemeter" "$WAYBAR_CFG" 2>/dev/null; then
+      echo ""
+      echo "NOTE: Remove 'custom/claudemeter' from your Waybar config manually:"
+      echo "  $WAYBAR_CFG"
+      echo "Also remove #custom-claudemeter styles from your Waybar style.css."
+      echo ""
+    fi
+  fi
+
   echo "Claudemeter uninstalled."
   exit 0
 fi
