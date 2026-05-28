@@ -52,12 +52,12 @@ For Sway and Hyprland users, Claudemeter provides a Waybar custom module that di
 
 Hover for a detailed tooltip with reset countdowns and status. The module uses CSS classes for color-coded states:
 
-| Class      | Condition       | Color          |
-| ---------- | --------------- | -------------- |
-| `normal`   | < 75 %          | Claude orange  |
-| `warning`  | 75–94 %         | Orange         |
-| `critical` | ≥ 95 %          | Red (blinking) |
-| `error`    | stale / error   | Gray           |
+| Class      | Condition              | Color          |
+| ---------- | ---------------------- | -------------- |
+| `normal`   | < 75 %, status=allow   | Claude orange  |
+| `warning`  | 75–94 %                | Orange         |
+| `critical` | ≥ 95 %                 | Red (blinking) |
+| `error`    | stale / blocked / error | Gray          |
 
 #### Quick setup
 

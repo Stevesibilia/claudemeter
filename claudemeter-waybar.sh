@@ -18,77 +18,83 @@ CACHE="${HOME}/.claude/.claudemeter-quota"
 [ ! -f "$CACHE" ] && exit 0
 [ -L "$CACHE" ] && exit 0
 
-# Read cache
-DATA=$(cat "$CACHE" 2>/dev/null)
-[ -z "$DATA" ] && exit 0
+# Read cache and produce Waybar JSON entirely in Python to avoid
+# shell interpolation issues with JSON escaping. The cache fields
+# sr/wr are in minutes (see claudemeter.py reset_minutes()).
+python3 - "$CACHE" <<'PYEOF'
+import json, sys, time
 
-# Parse JSON fields
-read -r S W SR WR ST TS <<< $(printf '%s' "$DATA" | python3 -c "
-import sys, json
+cache_path = sys.argv[1]
 try:
-    d = json.load(sys.stdin)
-    print(d.get('s', 0), d.get('w', 0), d.get('sr', 0), d.get('wr', 0), d.get('st', 'unknown'), d.get('ts', 0))
-except:
-    print('0 0 0 0 unknown 0')
-" 2>/dev/null)
+    with open(cache_path) as f:
+        d = json.load(f)
+except Exception:
+    sys.exit(0)
 
-[ -z "$S" ] && exit 0
+s = int(d.get("s", 0))
+w = int(d.get("w", 0))
+sr = int(d.get("sr", 0))   # reset in minutes
+wr = int(d.get("wr", 0))   # reset in minutes
+st = str(d.get("st", "unknown"))
+ts = int(d.get("ts", 0))
 
 # Staleness check
-NOW=$(date +%s)
-AGE=$((NOW - TS))
-STALE=""
-if [ "$AGE" -gt 120 ]; then
-  STALE=" ?"
-fi
+age = int(time.time()) - ts
+stale = age > 120
 
 # Glyph based on 5h utilization
-if [ "$S" -lt 50 ]; then
-  GLYPH="◔"
-elif [ "$S" -lt 75 ]; then
-  GLYPH="◑"
-elif [ "$S" -lt 95 ]; then
-  GLYPH="◕"
-else
-  GLYPH="●"
-fi
+if s < 50:
+    glyph = "◔"
+elif s < 75:
+    glyph = "◑"
+elif s < 95:
+    glyph = "◕"
+else:
+    glyph = "●"
 
-# CSS class for styling
-if [ "$ST" != "normal" ] || [ "$AGE" -gt 120 ]; then
-  CLASS="error"
-elif [ "$S" -ge 95 ]; then
-  CLASS="critical"
-elif [ "$S" -ge 75 ]; then
-  CLASS="warning"
-else
-  CLASS="normal"
-fi
+# CSS class — st values from Anthropic: allow, allow_warning, block
+# Treat allow/allow_warning as healthy; anything else is error.
+if st not in ("allow", "allow_warning") or stale:
+    css_class = "error"
+elif s >= 95:
+    css_class = "critical"
+elif s >= 75:
+    css_class = "warning"
+else:
+    css_class = "normal"
 
-# Format reset countdowns for tooltip
-format_reset() {
-  local secs=$1
-  if [ "$secs" -le 0 ]; then
-    echo "now"
-    return
-  fi
-  local h=$((secs / 3600))
-  local m=$(( (secs % 3600) / 60 ))
-  if [ "$h" -gt 0 ]; then
-    echo "${h}h ${m}m"
-  else
-    echo "${m}m"
-  fi
-}
+# Format reset countdown (input is minutes)
+def fmt_reset(mins):
+    if mins <= 0:
+        return "now"
+    d = mins // (60 * 24)
+    h = (mins % (60 * 24)) // 60
+    m = mins % 60
+    if d > 0:
+        return f"{d}d {h}h {m}m"
+    if h > 0:
+        return f"{h}h {m}m"
+    return f"{m}m"
 
-RESET_5H=$(format_reset "$SR")
-RESET_7D=$(format_reset "$WR")
+reset_5h = fmt_reset(sr)
+reset_7d = fmt_reset(wr)
+
+# Build text
+stale_suffix = " ?" if stale else ""
+text = f"{glyph} 5h:{s}% 7d:{w}%{stale_suffix}"
 
 # Build tooltip
-TOOLTIP="Claude Code Quota\n━━━━━━━━━━━━━━━━\n5h: ${S}% (resets in ${RESET_5H})\n7d: ${W}% (resets in ${RESET_7D})\nStatus: ${ST}"
-if [ -n "$STALE" ]; then
-  TOOLTIP="${TOOLTIP}\n⚠ Data is stale (${AGE}s old)"
-fi
+lines = [
+    "Claude Code Quota",
+    "━━━━━━━━━━━━━━━━",
+    f"5h: {s}% (resets in {reset_5h})",
+    f"7d: {w}% (resets in {reset_7d})",
+    f"Status: {st}",
+]
+if stale:
+    lines.append(f"⚠ Data is stale ({age}s old)")
+tooltip = "\n".join(lines)
 
-# Waybar JSON output
-printf '{"text":"%s 5h:%d%% 7d:%d%%%s","tooltip":"%s","class":"%s"}\n' \
-  "$GLYPH" "$S" "$W" "$STALE" "$TOOLTIP" "$CLASS"
+# Output valid JSON via json.dumps (handles escaping)
+print(json.dumps({"text": text, "tooltip": tooltip, "class": css_class}))
+PYEOF
