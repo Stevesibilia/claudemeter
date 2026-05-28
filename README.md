@@ -3,7 +3,7 @@
 Cross-platform Claude Code quota monitor. Shows your unified **5-hour** and **7-day** quota utilization in real time.
 
 - **macOS**: Menu bar indicator (Claude orange) + Claude Code statusline
-- **Linux**: Claude Code statusline
+- **Linux**: Claude Code statusline + Waybar module (Sway / Hyprland)
 
 ## What it shows
 
@@ -42,6 +42,48 @@ Click the icon to see:
 - Rate-limit status
 - Manual refresh
 
+### Waybar module (Sway / Hyprland)
+
+For Sway and Hyprland users, Claudemeter provides a Waybar custom module that displays quota in the bar with a rich tooltip:
+
+```
+◔ 5h:47% 7d:12%
+```
+
+Hover for a detailed tooltip with reset countdowns and status. The module uses CSS classes for color-coded states:
+
+| Class      | Condition       | Color          |
+| ---------- | --------------- | -------------- |
+| `normal`   | < 75 %          | Claude orange  |
+| `warning`  | 75–94 %         | Orange         |
+| `critical` | ≥ 95 %          | Red (blinking) |
+| `error`    | stale / error   | Gray           |
+
+#### Quick setup
+
+1. Install Claudemeter (the installer detects Waybar automatically):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Stevesibilia/claudemeter/main/install.sh | bash
+```
+
+2. Add the module to your Waybar config (`~/.config/waybar/config`):
+
+```json
+"modules-right": ["custom/claudemeter", "clock", "..."],
+
+"custom/claudemeter": {
+    "exec": "~/.local/share/claudemeter/claudemeter-waybar.sh",
+    "return-type": "json",
+    "interval": 30,
+    "tooltip": true
+}
+```
+
+3. Add styles to `~/.config/waybar/style.css` (see [`waybar/style.css`](waybar/style.css) for a ready-made snippet).
+
+4. Reload Waybar: `killall -SIGUSR2 waybar`
+
 ## How it works
 
 Claudemeter reads the OAuth access token from the macOS Keychain (`Claude Code-credentials`) or from `~/.claude/.credentials.json` (Linux), then sends a 1-token `POST /v1/messages` to `api.anthropic.com` once per minute. Anthropic's response carries the rate-limit headers:
@@ -70,6 +112,7 @@ Poll results are also written to `~/.claude/.claudemeter-quota` (JSON) which the
 |------|----------|------|
 | Menu bar | macOS | Full menu bar app + statusline cache |
 | Headless (`--headless`) | macOS + Linux | Background poller, writes cache only |
+| Waybar module | Linux (Sway / Hyprland) | Reads cache, outputs Waybar JSON |
 
 On Linux, the installer automatically uses headless mode. The Claude Code statusline reads the cache file on both platforms.
 

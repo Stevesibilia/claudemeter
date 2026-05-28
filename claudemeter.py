@@ -107,7 +107,10 @@ def poll_api(token: str) -> dict | None:
         resp = httpx.post(API_URL, headers=headers, json=API_BODY, timeout=20.0)
     except httpx.HTTPError as e:
         return {"ok": False, "error": str(e)}
-    if resp.status_code >= 400:
+
+    # Extract rate-limit headers even from 429 responses — Anthropic sends
+    # utilization data regardless of status code.
+    if resp.status_code >= 400 and resp.status_code != 429:
         return {"ok": False, "error": f"HTTP {resp.status_code}"}
 
     now = time.time()

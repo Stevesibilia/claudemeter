@@ -114,6 +114,7 @@ else
     || die "Failed to download $TARBALL_URL"
   echo "$CLAUDEMETER_VERSION" > "$INSTALL_DIR/.version"
   chmod +x "$INSTALL_DIR/run.sh" "$INSTALL_DIR/hooks/"*.sh
+  [ -f "$INSTALL_DIR/claudemeter-waybar.sh" ] && chmod +x "$INSTALL_DIR/claudemeter-waybar.sh"
   changed "updated to $CLAUDEMETER_VERSION"
 fi
 
@@ -188,6 +189,29 @@ with open(path, "w") as f:
     f.write("\n")
 PYEOF
   changed "statusLine registered"
+fi
+
+# --- Waybar hint (Sway / Hyprland) ----------------------------------------
+if [ "$PLATFORM" != "Darwin" ] && command -v waybar >/dev/null 2>&1; then
+  WAYBAR_SCRIPT="$INSTALL_DIR/claudemeter-waybar.sh"
+  if [ -f "$WAYBAR_SCRIPT" ]; then
+    echo ""
+    echo "Waybar detected! To add Claudemeter to your bar:"
+    echo ""
+    echo "  1. Add to ~/.config/waybar/config:"
+    echo '     "modules-right": ["custom/claudemeter", ...]'
+    echo ""
+    echo '     "custom/claudemeter": {'
+    echo "         \"exec\": \"$WAYBAR_SCRIPT\","
+    echo '         "return-type": "json",'
+    echo '         "interval": 30,'
+    echo '         "tooltip": true'
+    echo '     }'
+    echo ""
+    echo "  2. Add styles from: $INSTALL_DIR/waybar/style.css"
+    echo "  3. Reload: killall -SIGUSR2 waybar"
+    echo ""
+  fi
 fi
 
 # --- Result ---------------------------------------------------------------
