@@ -84,7 +84,7 @@ PlasmoidItem {
     }
 
     function readCache() {
-        // Append timestamp to avoid DataSource caching the command result
+        // Disconnect before reconnecting to force re-execution (DataSource caches by source string)
         var cmd = "cat \"$HOME/.claude/.claudemeter-quota\" 2>/dev/null || echo ''";
         if (executable.connectedSources.indexOf(cmd) !== -1) {
             executable.disconnectSource(cmd);

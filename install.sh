@@ -214,16 +214,21 @@ if [ "$PLATFORM" != "Darwin" ] && command -v plasmashell >/dev/null 2>&1; then
   PLASMOID_DIR="$INSTALL_DIR/kde-plasmoid"
   if [ -d "$PLASMOID_DIR" ]; then
     if kpackagetool6 --type Plasma/Applet --show org.kde.claudemeter >/dev/null 2>&1; then
-      kpackagetool6 --type Plasma/Applet --upgrade "$PLASMOID_DIR" 2>/dev/null && changed "plasmoid upgraded" || true
+      # Compare installed version with source to avoid false CHANGED
+      INSTALLED_VER=$(python3 -c "import json; print(json.load(open('$HOME/.local/share/plasma/plasmoids/org.kde.claudemeter/metadata.json'))['KPlugin']['Version'])" 2>/dev/null || echo "")
+      SOURCE_VER=$(python3 -c "import json; print(json.load(open('$PLASMOID_DIR/metadata.json'))['KPlugin']['Version'])" 2>/dev/null || echo "")
+      if [ "$INSTALLED_VER" != "$SOURCE_VER" ]; then
+        kpackagetool6 --type Plasma/Applet --upgrade "$PLASMOID_DIR" 2>/dev/null && changed "plasmoid upgraded to $SOURCE_VER"
+      fi
     else
       kpackagetool6 --type Plasma/Applet --install "$PLASMOID_DIR" && changed "plasmoid installed"
+      echo ""
+      echo "KDE Plasma widget installed! To add it to your panel:"
+      echo "  1. Right-click your panel → Add Widgets"
+      echo "  2. Search for \"Claudemeter\""
+      echo "  3. Drag it to your panel"
+      echo ""
     fi
-    echo ""
-    echo "KDE Plasma widget installed! To add it to your panel:"
-    echo "  1. Right-click your panel → Add Widgets"
-    echo "  2. Search for \"Claudemeter\""
-    echo "  3. Drag it to your panel"
-    echo ""
   fi
 fi
 
