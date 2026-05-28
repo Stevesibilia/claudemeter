@@ -8,3 +8,4 @@ remaining=$(ls /tmp/claudemeter-sessions/ 2>/dev/null | wc -l | tr -d ' ')
 
 [ "$remaining" -gt 0 ] && exit 0
 pkill -f "python.*claudemeter\.py" 2>/dev/null || true
+[ ! -L "$HOME/.claude/.claudemeter-quota" ] && rm -f "$HOME/.claude/.claudemeter-quota"

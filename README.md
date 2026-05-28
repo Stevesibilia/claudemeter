@@ -3,7 +3,7 @@
 Cross-platform Claude Code quota monitor. Shows your unified **5-hour** and **7-day** quota utilization in real time.
 
 - **macOS**: Menu bar indicator (Claude orange) + Claude Code statusline
-- **Linux**: Claude Code statusline + Waybar module (Sway / Hyprland)
+- **Linux**: Claude Code statusline + Waybar module (Sway / Hyprland) + KDE Plasma 6 widget
 
 ## What it shows
 
@@ -84,6 +84,21 @@ curl -fsSL https://raw.githubusercontent.com/Stevesibilia/claudemeter/main/insta
 
 4. Reload Waybar: `killall -SIGUSR2 waybar`
 
+### KDE Plasma 6 widget
+
+The installer automatically detects KDE Plasma and installs the widget. After installation:
+
+1. Right-click your panel → **Add Widgets**
+2. Search for "Claudemeter"
+3. Drag it to your panel
+
+The widget:
+
+- Shows `◑ 5h:42% 7d:67%` in Claude orange with color thresholds at 75% (amber) and 95% (red)
+- Auto-hides when Claude Code is not running (cache file deleted on session end)
+- Shows stale indicator (⚠ + faded) if data is >2 minutes old
+- Click to see reset times and status details
+
 ## How it works
 
 Claudemeter reads the OAuth access token from the macOS Keychain (`Claude Code-credentials`) or from `~/.claude/.credentials.json` (Linux), then sends a 1-token `POST /v1/messages` to `api.anthropic.com` once per minute. Anthropic's response carries the rate-limit headers:
@@ -113,6 +128,7 @@ Poll results are also written to `~/.claude/.claudemeter-quota` (JSON) which the
 | Menu bar | macOS | Full menu bar app + statusline cache |
 | Headless (`--headless`) | macOS + Linux | Background poller, writes cache only |
 | Waybar module | Linux (Sway / Hyprland) | Reads cache, outputs Waybar JSON |
+| KDE Plasma widget | Linux (KDE Plasma 6) | Reads cache, panel widget with popup |
 
 On Linux, the installer automatically uses headless mode. The Claude Code statusline reads the cache file on both platforms.
 
