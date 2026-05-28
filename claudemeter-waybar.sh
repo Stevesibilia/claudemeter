@@ -52,9 +52,9 @@ elif s < 95:
 else:
     glyph = "●"
 
-# CSS class — st values from Anthropic: allow, allow_warning, block
-# Treat allow/allow_warning as healthy; anything else is error.
-if st not in ("allow", "allow_warning") or stale:
+# CSS class — st values from Anthropic headers: allowed, allow_warning, blocked, etc.
+# Treat anything starting with "allow" as healthy; anything else is error.
+if not st.startswith("allow") or stale:
     css_class = "error"
 elif s >= 95:
     css_class = "critical"
