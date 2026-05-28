@@ -78,18 +78,17 @@ PlasmoidItem {
 
         onNewData: function(source, data) {
             var stdout = data["stdout"] || "";
-            var exitCode = data["exit code"] || 0;
             disconnectSource(source);
-            if (exitCode === 0) {
-                parseOutput(stdout);
-            } else {
-                cacheExists = false;
-            }
+            parseOutput(stdout);
         }
     }
 
     function readCache() {
-        var cmd = "cat \"$HOME/.claude/.claudemeter-quota\" 2>/dev/null";
+        // Append timestamp to avoid DataSource caching the command result
+        var cmd = "cat \"$HOME/.claude/.claudemeter-quota\" 2>/dev/null || echo ''";
+        if (executable.connectedSources.indexOf(cmd) !== -1) {
+            executable.disconnectSource(cmd);
+        }
         executable.connectSource(cmd);
     }
 
@@ -106,8 +105,9 @@ PlasmoidItem {
 
     compactRepresentation: MouseArea {
         id: compactMouse
-        Layout.preferredWidth: compactCol.implicitWidth
-        Layout.preferredHeight: compactCol.implicitHeight
+        Layout.preferredWidth: root.cacheExists ? compactGrid.implicitWidth : 0
+        Layout.preferredHeight: root.cacheExists ? compactGrid.implicitHeight : 0
+        visible: root.cacheExists
         onClicked: root.expanded = !root.expanded
 
         GridLayout {
