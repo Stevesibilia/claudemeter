@@ -38,21 +38,24 @@ if [[ "${1:-}" == "--uninstall" ]]; then
   # Remove hooks
   SETTINGS="$HOME/.claude/settings.json"
   if [ -f "$SETTINGS" ]; then
-    python3 - "$SETTINGS" "$INSTALL_DIR" <<'PYEOF'
+    python3 - "$SETTINGS" <<'PYEOF'
 import json, sys
 
-path, install_dir = sys.argv[1], sys.argv[2]
+path = sys.argv[1]
 with open(path) as f:
     cfg = json.load(f)
 
+# Match any claudemeter hook regardless of install dir (default or dev repo).
+def is_claudemeter(h):
+    return isinstance(h, dict) and "claudemeter" in h.get("command", "")
+
 hooks = cfg.get("hooks", {})
-for section in ["SessionStart", "SessionEnd"]:
+for section in ["SessionStart", "SessionEnd", "Stop"]:
     entries = hooks.get(section, [])
     cleaned = []
     for e in entries:
         if isinstance(e, dict):
-            inner = [h for h in e.get("hooks", [])
-                     if not (isinstance(h, dict) and install_dir in h.get("command", ""))]
+            inner = [h for h in e.get("hooks", []) if not is_claudemeter(h)]
             if inner:
                 cleaned.append({**e, "hooks": inner})
         else:
